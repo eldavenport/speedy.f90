@@ -72,7 +72,7 @@ module sea_model
     ! 0 = climatological SST
     ! 1 = observed anomaly
     ! (active if sea_coupling_flag = 0, 1; set to 1 if sea_coupling_flag = 4)
-    integer :: sst_anomaly_coupling_flag = 1
+    integer :: sst_anomaly_coupling_flag = 0
 
 contains
     ! Initialization of sea model
