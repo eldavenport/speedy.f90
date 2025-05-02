@@ -38,7 +38,7 @@ module land_model
     real(p) :: snowd12(ix,il,12) !! Snow depth (water equivalent) monthly-mean climatology
     real(p) :: soilw12(ix,il,12) !! Soil water availability monthly-mean climatology
 
-    integer :: land_coupling_flag = 1 !! Flag for land-coupling (0: off, 1: on)
+    integer :: land_coupling_flag = 0 !! Flag for land-coupling (0: off, 1: on)
 
     real(p), parameter :: sd2sc = 60.0 !! Snow depth (mm water) corresponding to snow cover = 1
 
