@@ -4,8 +4,8 @@
 ROOT=`pwd`
 BIN=$ROOT/bin
 RUNDIR=$ROOT/rundir
-CLIM=$ROOT/data/bc/t30/default_jcm
-ANOM=$ROOT/data/bc/t30/default_jcm
+CLIM=$ROOT/data/bc/t30/clim
+ANOM=$ROOT/data/bc/t30/clim
 
 # Check model executable exists
 if [ ! -f $BIN/speedy ]; then
@@ -28,7 +28,7 @@ ln -s $CLIM/sea_ice.nc .
 ln -s $CLIM/land.nc .
 ln -s $CLIM/snow.nc .
 ln -s $CLIM/soil.nc .
-ln -s $ANOM/sea_surface_temperature_anomaly.nc .
+#ln -s $ANOM/sea_surface_temperature_anomaly.nc .
 
 # Copy namelist file to run directory
 cp ../namelist.nml $RUNDIR
