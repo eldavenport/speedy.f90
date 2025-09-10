@@ -45,8 +45,7 @@ module land_model
 contains
     !> Initializes land model.
     subroutine land_model_init
-        use input_output, only: load_boundary_file
-        use boundaries, only: forchk, fmask, alb0, fillsf
+        use boundaries, only: forchk, fmask, alb0, fillsf, load_boundary_file
 
         ! Auxiliary variables
         integer :: i, j, month

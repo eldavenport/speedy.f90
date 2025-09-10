@@ -77,10 +77,9 @@ module sea_model
 contains
     ! Initialization of sea model
     subroutine sea_model_init
-        use boundaries, only: fmask, fillsf, forchk
+        use boundaries, only: fmask, fillsf, forchk, load_boundary_file
         use date, only: isst0
         use geometry, only: radang
-        use input_output, only: load_boundary_file
 
         ! Domain mask
         real(p) :: dmask(ix,il)
@@ -365,8 +364,7 @@ contains
     ! Update observed SST anomaly array
     subroutine obs_ssta
         use date, only: model_datetime, start_datetime
-        use input_output, only: load_boundary_file
-        use boundaries, only: forchk
+        use boundaries, only: forchk, load_boundary_file
 
         integer :: next_month
 

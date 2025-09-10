@@ -6,14 +6,16 @@
 !  surface geopotential (i.e. the orography), the filtered surface geopotential
 !  (i.e. the smoothed orography) and the bare-land annual-mean albedo.
 module boundaries
-    use types, only: p
+    use types, only: p, sp
     use params
+    use netcdf
 
     implicit none
 
     private
     public initialize_boundaries, fillsf, forchk
     public fmask, phi0, phis0, alb0
+    public load_boundary_file
 
     real(p) :: fmask(ix,il) !! Original (fractional) land-sea mask
 
@@ -22,12 +24,91 @@ module boundaries
     real(p) :: phis0(ix,il) !! Spectrally-filtered surface geopotential
     real(p) :: alb0(ix,il)  !! Bare-land annual-mean albedo
 
+    !> Interface for reading boundary files.
+    interface load_boundary_file
+    module procedure load_boundary_file_2d
+    module procedure load_boundary_file_one_month_from_year
+    module procedure load_boundary_file_one_month_from_long
+    end interface
+
 contains
+    !> Loads the given 2D field from the given boundary file.
+    function load_boundary_file_2d(file_name, field_name) result(field)
+        character(len=*), intent(in) :: file_name  !! The NetCDF file to read from
+        character(len=*), intent(in) :: field_name !! The field to read
+
+        integer :: ncid, varid
+        real(sp), dimension(ix,il) :: raw_input
+        real(p), dimension(ix,il)  :: field
+
+        ! Open boundary file, read variable and then close
+        call check(nf90_open(file_name, nf90_nowrite, ncid))
+        call check(nf90_inq_varid(ncid, field_name, varid))
+        call check(nf90_get_var(ncid, varid, raw_input, start = (/ 1, 1 /), count =  (/ ix, il /)))
+        call check(nf90_close(ncid))
+        field = raw_input(:,il:1:-1)
+
+        ! Fix undefined values
+        where (field <= -999) field = 0.0
+    end function
+
+    !> Loads the given 2D field at the given month from the given monthly
+    !  boundary file.
+    function load_boundary_file_one_month_from_year(file_name, field_name, month) result(field)
+        character(len=*), intent(in) :: file_name  !! The NetCDF file to read from
+        character(len=*), intent(in) :: field_name !! The field to read
+        integer, intent(in)          :: month      !! The month to read
+
+        integer :: ncid, varid
+        real(sp), dimension(ix,il,12) :: raw_input
+        real(p), dimension(ix,il)     :: field
+
+        ! Open boundary file, read variable and then close
+        call check(nf90_open(file_name, nf90_nowrite, ncid))
+        call check(nf90_inq_varid(ncid, field_name, varid))
+        call check(nf90_get_var(ncid, varid, raw_input))
+        call check(nf90_close(ncid))
+        field = raw_input(:,il:1:-1,month)
+
+        ! Fix undefined values
+        where (field <= -999) field = 0.0
+    end
+
+    !> Loads the given 2D field at the given month from the given boundary file
+    !  of a given length.
+    !
+    !  This is used for reading the SST anomalies from a particular month of a
+    !  particular year. The SST anomalies are stored in a long multidecadal
+    !  file and the total number of months in this file must be passed as an
+    !  argument (`length`).
+    function load_boundary_file_one_month_from_long(file_name, field_name, month, length) &
+        & result(field)
+        character(len=*), intent(in) :: file_name  !! The NetCDF file to read from
+        character(len=*), intent(in) :: field_name !! The field to read
+        integer, intent(in)          :: month      !! The month to read
+        integer, intent(in)          :: length     !! The total length of the file in number of
+                                                !! months
+
+        integer :: ncid, varid
+        real(sp), dimension(ix,il,length) :: raw_input
+        real(p), dimension(ix,il)         :: field
+
+        ! Open boundary file, read variable and then close
+        call check(nf90_open(file_name, nf90_nowrite, ncid))
+        call check(nf90_inq_varid(ncid, field_name, varid))
+        call check(nf90_get_var(ncid, varid, raw_input))
+        call check(nf90_close(ncid))
+        field = raw_input(:,il:1:-1,month)
+
+        ! Fix undefined values
+        where (field <= -999) field = 0.0
+    end
+
+
     !> Initialize boundary conditions (land-sea mask, surface geopotential
     !  and surface albedo).
     subroutine initialize_boundaries
         use physical_constants, only: grav
-        use input_output, only: load_boundary_file
 
         ! Read surface geopotential (i.e. orography)
         phi0 = grav*load_boundary_file("surface.nc", "orog")
@@ -139,5 +220,15 @@ contains
                 end do
             end do
         end do
+    end subroutine
+
+    !> Handles any errors from the NetCDF API.
+    subroutine check(ierr)
+        integer, intent(in) :: ierr
+
+        if (ierr /= nf90_noerr) then
+            print *, trim(adjustl(nf90_strerror(ierr)))
+            stop
+        end if
     end subroutine
 end module

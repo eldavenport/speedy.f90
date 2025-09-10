@@ -5,93 +5,15 @@ module input_output
     use types, only: p, sp
     use netcdf
     use params
+    use physics, only: rh
 
     implicit none
 
     private
-    public output, load_boundary_file
-
-    !> Interface for reading boundary files.
-    interface load_boundary_file
-        module procedure load_boundary_file_2d
-        module procedure load_boundary_file_one_month_from_year
-        module procedure load_boundary_file_one_month_from_long
-    end interface
+    public output
 
 contains
-    !> Loads the given 2D field from the given boundary file.
-    function load_boundary_file_2d(file_name, field_name) result(field)
-        character(len=*), intent(in) :: file_name  !! The NetCDF file to read from
-        character(len=*), intent(in) :: field_name !! The field to read
-
-        integer :: ncid, varid
-        real(sp), dimension(ix,il) :: raw_input
-        real(p), dimension(ix,il)  :: field
-
-        ! Open boundary file, read variable and then close
-        call check(nf90_open(file_name, nf90_nowrite, ncid))
-        call check(nf90_inq_varid(ncid, field_name, varid))
-        call check(nf90_get_var(ncid, varid, raw_input, start = (/ 1, 1 /), count =  (/ ix, il /)))
-        call check(nf90_close(ncid))
-        field = raw_input(:,il:1:-1)
-
-        ! Fix undefined values
-        where (field <= -999) field = 0.0
-    end function
-
-    !> Loads the given 2D field at the given month from the given monthly
-    !  boundary file.
-    function load_boundary_file_one_month_from_year(file_name, field_name, month) result(field)
-        character(len=*), intent(in) :: file_name  !! The NetCDF file to read from
-        character(len=*), intent(in) :: field_name !! The field to read
-        integer, intent(in)          :: month      !! The month to read
-
-        integer :: ncid, varid
-        real(sp), dimension(ix,il,12) :: raw_input
-        real(p), dimension(ix,il)     :: field
-
-        ! Open boundary file, read variable and then close
-        call check(nf90_open(file_name, nf90_nowrite, ncid))
-        call check(nf90_inq_varid(ncid, field_name, varid))
-        call check(nf90_get_var(ncid, varid, raw_input))
-        call check(nf90_close(ncid))
-        field = raw_input(:,il:1:-1,month)
-
-        ! Fix undefined values
-        where (field <= -999) field = 0.0
-    end
-
-    !> Loads the given 2D field at the given month from the given boundary file
-    !  of a given length.
-    !
-    !  This is used for reading the SST anomalies from a particular month of a
-    !  particular year. The SST anomalies are stored in a long multidecadal
-    !  file and the total number of months in this file must be passed as an
-    !  argument (`length`).
-    function load_boundary_file_one_month_from_long(file_name, field_name, month, length) &
-        & result(field)
-        character(len=*), intent(in) :: file_name  !! The NetCDF file to read from
-        character(len=*), intent(in) :: field_name !! The field to read
-        integer, intent(in)          :: month      !! The month to read
-        integer, intent(in)          :: length     !! The total length of the file in number of
-                                                   !! months
-
-        integer :: ncid, varid
-        real(sp), dimension(ix,il,length) :: raw_input
-        real(p), dimension(ix,il)         :: field
-
-        ! Open boundary file, read variable and then close
-        call check(nf90_open(file_name, nf90_nowrite, ncid))
-        call check(nf90_inq_varid(ncid, field_name, varid))
-        call check(nf90_get_var(ncid, varid, raw_input))
-        call check(nf90_close(ncid))
-        field = raw_input(:,il:1:-1,month)
-
-        ! Fix undefined values
-        where (field <= -999) field = 0.0
-    end
-
-    !> Writes a snapshot of all prognostic variables to a NetCDF file.
+    !> Writes a snapshot of all prognostic (and other) variables to a NetCDF file.
     subroutine output(timestep, vor, div, t, ps, tr, phi)
         use geometry, only: radang, fsg
         use physical_constants, only: p0, grav
@@ -115,7 +37,7 @@ contains
         character(len=32) :: time_template = 'hours since yyyy-mm-dd hh:mm:0.0'
         integer :: k, ncid
         integer :: timedim, latdim, londim, levdim
-        integer :: timevar, latvar, lonvar, levvar, uvar, vvar, tvar, qvar, phivar, psvar
+        integer :: timevar, latvar, lonvar, levvar, uvar, vvar, tvar, qvar, phivar, psvar, rhvar
 
         ! Construct file_name
         write (file_name(1:4),'(i4.4)') model_datetime%year
@@ -160,14 +82,20 @@ contains
         call check(nf90_def_var(ncid, "t", nf90_real4, (/ londim, latdim, levdim, timedim /), tvar))
         call check(nf90_put_att(ncid, tvar, "long_name", "air_temperature"))
         call check(nf90_put_att(ncid, tvar, "units", "K"))
+
         call check(nf90_def_var(ncid, "q", nf90_real4, (/ londim, latdim, levdim, timedim /), qvar))
         call check(nf90_put_att(ncid, qvar, "long_name", "specific_humidity"))
         call check(nf90_put_att(ncid, qvar, "units", "1"))
+
+        call check(nf90_def_var(ncid, "rh", nf90_real4, (/ londim, latdim, levdim, timedim /), rhvar))
+        call check(nf90_put_att(ncid, rhvar, "long_name", "relative_humidity"))
+        call check(nf90_put_att(ncid, rhvar, "units", "1"))
 
         call check(nf90_def_var(ncid, "phi", nf90_real4, (/ londim, latdim, levdim, timedim /), &
             & phivar))
         call check(nf90_put_att(ncid, phivar, "long_name", "geopotential_height"))
         call check(nf90_put_att(ncid, phivar, "units", "m"))
+
         call check(nf90_def_var(ncid, "ps", nf90_real4, (/ londim, latdim, timedim /), psvar))
         call check(nf90_put_att(ncid, psvar, "long_name", "surface_air_pressure"))
         call check(nf90_put_att(ncid, psvar, "units", "Pa"))
@@ -212,6 +140,7 @@ contains
         call check(nf90_put_var(ncid, qvar, q_out, (/ 1, 1, 1, 1 /)))
         call check(nf90_put_var(ncid, phivar, phi_out, (/ 1, 1, 1, 1 /)))
         call check(nf90_put_var(ncid, psvar, ps_out, (/ 1, 1, 1 /)))
+        call check(nf90_put_var(ncid, rhvar, rh, (/ 1, 1, 1 /)))
 
         call check(nf90_close(ncid))
     end subroutine
