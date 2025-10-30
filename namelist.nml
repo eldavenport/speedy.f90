@@ -2,7 +2,7 @@
 ! nstdia     = model diagnostics are printed every nstdia timesteps
 ! 1080 is every 30 days with a 40min timestep
 &params
-nsteps_out = 1080
+nsteps_out = 1
 nstdia     = 1080
 /
 ! start_datetime = the start datetime of the model integration
