@@ -1,8 +1,9 @@
 ! nsteps_out = model variables are output every nsteps_out timesteps
 ! nstdia     = model diagnostics are printed every nstdia timesteps
+! 1080 is every 30 days with a 40min timestep
 &params
-nsteps_out = 1
-nstdia     = 180
+nsteps_out = 1080
+nstdia     = 1080
 /
 ! start_datetime = the start datetime of the model integration
 ! end_datetime   = the end datetime of the model integration
@@ -12,9 +13,9 @@ start_datetime%month  = 1
 start_datetime%day    = 1
 start_datetime%hour   = 0
 start_datetime%minute = 0
-end_datetime%year     = 1982
+end_datetime%year     = 1985
 end_datetime%month    = 1
-end_datetime%day      = 21
+end_datetime%day      = 1
 end_datetime%hour     = 0
 end_datetime%minute   = 0
 /
