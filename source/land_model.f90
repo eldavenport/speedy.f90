@@ -206,10 +206,12 @@ contains
             ! Run the land model if the land model flags is switched on
             if (land_coupling_flag == 1) then
                 call run_land_model
+                print *, 'land model run'
 
                 stl_am = stl_lm
             ! Otherwise get the land surface from climatology
             else
+                print *, 'land model off'
                 stl_am = stlcl_ob
             end if
         end if

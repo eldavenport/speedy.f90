@@ -63,6 +63,7 @@ contains
         vordt = do_horizontal_diffusion(vor(:,:,:,1), vordt, dmp,  dmp1)
         divdt = do_horizontal_diffusion(div(:,:,:,1), divdt, dmpd, dmp1d)
 
+        ! correction
         do k = 1, kx
             do m = 1, mx
                 do n = 1, nx
@@ -71,6 +72,7 @@ contains
             end do
         end do
 
+        ! diffusion of temperature
         tdt = do_horizontal_diffusion(ctmp, tdt, dmp, dmp1)
 
         ! Stratospheric diffusion and zonal wind damping
@@ -85,6 +87,7 @@ contains
         tdt   = do_horizontal_diffusion(ctmp, tdt,   dmps, dmp1s)
 
         ! Diffusion of tracers
+        ! correction 
         do k = 1, kx
             do m = 1, mx
                 do n = 1, nx
@@ -93,6 +96,7 @@ contains
             end do
         end do
 
+        ! diffusion of specific humditiy 
         trdt(:,:,:,1) = do_horizontal_diffusion(ctmp, trdt(:,:,:,1), dmpd, dmp1d)
 
         if (ntr > 1) then

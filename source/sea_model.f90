@@ -66,7 +66,7 @@ module sea_model
     integer :: sea_coupling_flag  = 0
 
     ! Flag for sea-ice coupling
-    integer :: ice_coupling_flag  = 1
+    integer :: ice_coupling_flag  = 0
 
     ! Flag for observed SST anomaly
     ! 0 = climatological SST
@@ -320,6 +320,7 @@ contains
                 ! 1. Run ocean mixed layer or
                 !    call message-passing routines to receive data from ocean model
                 call run_sea_model
+                print *, 'running sea model'
             end if
         end if
 
@@ -350,6 +351,7 @@ contains
 
         ! 3.2 Sea ice fraction and temperature
         if (ice_coupling_flag > 0) then
+            print *, 'ice coupling active'
             sice_am = sice_om
             tice_am = tice_om
         else
