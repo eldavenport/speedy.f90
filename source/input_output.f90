@@ -6,6 +6,7 @@ module input_output
     use netcdf
     use params
     use physics, only: rh
+    use auxiliaries, only: precnv
 
     implicit none
 
@@ -37,7 +38,7 @@ contains
         character(len=32) :: time_template = 'hours since yyyy-mm-dd hh:mm:0.0'
         integer :: k, ncid
         integer :: timedim, latdim, londim, levdim
-        integer :: timevar, latvar, lonvar, levvar, uvar, vvar, tvar, qvar, phivar, psvar, rhvar
+        integer :: timevar, latvar, lonvar, levvar, uvar, vvar, tvar, qvar, phivar, psvar, rhvar, precnvvar
 
         ! Construct file_name
         write (file_name(1:4),'(i4.4)') model_datetime%year
@@ -86,6 +87,10 @@ contains
         call check(nf90_def_var(ncid, "q", nf90_real4, (/ londim, latdim, levdim, timedim /), qvar))
         call check(nf90_put_att(ncid, qvar, "long_name", "specific_humidity"))
         call check(nf90_put_att(ncid, qvar, "units", "1"))
+
+        call check(nf90_def_var(ncid, "precnv", nf90_real4, (/ londim, latdim, timedim /), precnvvar))
+        call check(nf90_put_att(ncid, precnvvar, "long_name", "convective_precipitation"))
+        call check(nf90_put_att(ncid, precnvvar, "units", "g/(m^2 s)"))
 
         call check(nf90_def_var(ncid, "rh", nf90_real4, (/ londim, latdim, levdim, timedim /), rhvar))
         call check(nf90_put_att(ncid, rhvar, "long_name", "relative_humidity"))
@@ -140,7 +145,8 @@ contains
         call check(nf90_put_var(ncid, qvar, q_out, (/ 1, 1, 1, 1 /)))
         call check(nf90_put_var(ncid, phivar, phi_out, (/ 1, 1, 1, 1 /)))
         call check(nf90_put_var(ncid, psvar, ps_out, (/ 1, 1, 1 /)))
-        call check(nf90_put_var(ncid, rhvar, rh, (/ 1, 1, 1 /)))
+        call check(nf90_put_var(ncid, rhvar, rh, (/ 1, 1, 1, 1 /)))
+        call check(nf90_put_var(ncid, precnvvar, precnv, (/ 1, 1, 1 /)))
 
         call check(nf90_close(ncid))
     end subroutine
