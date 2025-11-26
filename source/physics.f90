@@ -45,7 +45,7 @@ contains
     !  to the dynamical grid-point tendencies
     subroutine get_physical_tendencies(vor, div, t, q, phi, psl, utend, vtend, ttend, qtend)
         use auxiliaries, only: precnv, precls, cbmf, tsr, ssrd, ssr, slrd, slr, olr, slru, ustr, &
-            & vstr, shf, evap, hfluxn, qdif, denvvs_out_0, denvvs_out_1, denvvs_out_2
+            & vstr, shf, evap, hfluxn, qdif, denvvs_out
         use physical_constants, only: sigh, grdsig, grdscp, cp
         use geometry, only: fsg
         use boundaries, only: phis0
@@ -170,12 +170,12 @@ contains
 
         ! Compute surface fluxes and land skin temperature
         call get_surface_fluxes(psg, ug, vg, tg, qg, rh, phig, phis0, fmask_l, sst_am, &
-                & ssrd, slrd, ustr, vstr, shf, evap, slru, hfluxn, ts, tskin, u0, v0, t0, .true., denvvs_out_0, denvvs_out_1, denvvs_out_2)
+                & ssrd, slrd, ustr, vstr, shf, evap, slru, hfluxn, ts, tskin, u0, v0, t0, .true., denvvs_out)
 
         ! Recompute sea fluxes in case of anomaly coupling
         if (sea_coupling_flag > 0) then
            call get_surface_fluxes(psg, ug, vg, tg, qg, rh, phig, phis0, fmask_l, ssti_om, &
-                   & ssrd, slrd, ustr, vstr, shf, evap, slru, hfluxn, ts, tskin, u0, v0, t0, .false., denvvs_out_0, denvvs_out_1, denvvs_out_2)
+                   & ssrd, slrd, ustr, vstr, shf, evap, slru, hfluxn, ts, tskin, u0, v0, t0, .false., denvvs_out)
         end if
 
         ! Compute upward longwave fluxes, convert them to tendencies and add

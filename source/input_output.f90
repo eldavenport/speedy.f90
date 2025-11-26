@@ -6,7 +6,7 @@ module input_output
     use netcdf
     use params
     use physics, only: rh
-    use auxiliaries, only: precnv, qdif, evap, denvvs_out_0, denvvs_out_1, denvvs_out_2
+    use auxiliaries, only: precnv, qdif, evap, denvvs_out
 
     implicit none
 
@@ -179,9 +179,9 @@ contains
         call check(nf90_put_var(ncid, evapvar_0, evap(:,:,1), (/ 1, 1, 1 /)))
         call check(nf90_put_var(ncid, evapvar_1, evap(:,:,2), (/ 1, 1, 1 /)))
         call check(nf90_put_var(ncid, evapvar_2, evap(:,:,3), (/ 1, 1, 1 /)))
-        call check(nf90_put_var(ncid, denvvsvar_0, denvvs_out_0, (/ 1, 1, 1 /)))
-        call check(nf90_put_var(ncid, denvvsvar_1, denvvs_out_1, (/ 1, 1, 1 /)))
-        call check(nf90_put_var(ncid, denvvsvar_2, denvvs_out_2, (/ 1, 1, 1 /)))
+        call check(nf90_put_var(ncid, denvvsvar_0, denvvs_out(:,:,0), (/ 1, 1, 1 /)))
+        call check(nf90_put_var(ncid, denvvsvar_1, denvvs_out(:,:,1), (/ 1, 1, 1 /)))
+        call check(nf90_put_var(ncid, denvvsvar_2, denvvs_out(:,:,2), (/ 1, 1, 1 /)))
 
         call check(nf90_close(ncid))
     end subroutine

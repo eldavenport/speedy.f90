@@ -39,8 +39,7 @@ contains
     !> Compute surface fluxes of momentum, energy and moisture, and define surface
     !  skin temperature from energy balance
     subroutine get_surface_fluxes(psa, ua, va, ta, qa, rh, phi, phi0, fmask, tsea, ssrd, slrd, &
-            & ustr, vstr, shf, evap, slru, hfluxn, tsfc, tskin, u0, v0, t0, lfluxland, &
-            & denvvs_out_0, denvvs_out_1, denvvs_out_2)
+            & ustr, vstr, shf, evap, slru, hfluxn, tsfc, tskin, u0, v0, t0, lfluxland, denvvs_out)
         use physical_constants, only: p0, rgas, cp, alhc, sbc, sigl, wvi
         use geometry, only: coa
         use mod_radcon, only: emisfc, alb_l, alb_s, snowc
@@ -71,9 +70,7 @@ contains
         real(p), intent(out) :: u0(ix,il) !! Near-surface u-wind
         real(p), intent(out) :: v0(ix,il) !! Near-surface v-wind
         real(p), intent(out) :: t0(ix,il) !! Near-surface temperature
-        real(p), intent(out) :: denvvs_out_0(ix,il)
-        real(p), intent(out) :: denvvs_out_1(ix,il)
-        real(p), intent(out) :: denvvs_out_2(ix,il)
+        real(p), intent(out) :: denvvs_out(ix,il)
 
         integer :: i, j, ks, nl1
         real(p), dimension(ix,il,2), save :: t1, q1
@@ -300,9 +297,7 @@ contains
             t0    = t1(:,:,2) + fmask*(t1(:,:,1) - t1(:,:,2))
         end if
 
-        denvvs_out_0 = denvvs(:,:,0)
-        denvvs_out_1 = denvvs(:,:,1)
-        denvvs_out_2 = denvvs(:,:,2)
+        denvvs_out = denvvs
     end
 
     ! Compute orographic factor for land surface drag
