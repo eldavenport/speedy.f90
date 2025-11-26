@@ -33,14 +33,14 @@ module surface_fluxes
     real(p) :: clambda = 7.0  !! Heat conductivity in skin-to-root soil layer
     real(p) :: clambsn = 7.0  !! Heat conductivity in soil for snow cover = 1
 
-
     real(p) :: forog(ix,il) ! Time-invariant fields (initial. in SFLSET)
 
 contains
     !> Compute surface fluxes of momentum, energy and moisture, and define surface
     !  skin temperature from energy balance
     subroutine get_surface_fluxes(psa, ua, va, ta, qa, rh, phi, phi0, fmask, tsea, ssrd, slrd, &
-            & ustr, vstr, shf, evap, slru, hfluxn, tsfc, tskin, u0, v0, t0, lfluxland)
+            & ustr, vstr, shf, evap, slru, hfluxn, tsfc, tskin, u0, v0, t0, lfluxland, &
+            & denvvs_out_0, denvvs_out_1, denvvs_out_2)
         use physical_constants, only: p0, rgas, cp, alhc, sbc, sigl, wvi
         use geometry, only: coa
         use mod_radcon, only: emisfc, alb_l, alb_s, snowc
@@ -71,6 +71,9 @@ contains
         real(p), intent(out) :: u0(ix,il) !! Near-surface u-wind
         real(p), intent(out) :: v0(ix,il) !! Near-surface v-wind
         real(p), intent(out) :: t0(ix,il) !! Near-surface temperature
+        real(p), intent(out) :: denvvs_out_0(ix,il)
+        real(p), intent(out) :: denvvs_out_1(ix,il)
+        real(p), intent(out) :: denvvs_out_2(ix,il)
 
         integer :: i, j, ks, nl1
         real(p), dimension(ix,il,2), save :: t1, q1
@@ -272,6 +275,9 @@ contains
         qsat0(:,:,2) = get_qsat(tsea, psa, 1.0_p)
         evap(:,:,2) = chs*denvvs(:,:,ks)*(qsat0(:,:,2) - q1(:,:,2))
 
+        ! for testing outputs with evap = 0 over land like we're seeing in jcm
+        ! evap(:,:,:) = evap(:,:,:) * (1.0_p - spread(fmask, 3, size(evap,3)))
+
         ! 4.5 Emission of lw radiation from the surface
         !     and net heat fluxes into sea surface
         slru(:,:,2) = esbc*tsea**4.0
@@ -293,6 +299,10 @@ contains
             tskin = tsea      + fmask*(tskin  - tsea)
             t0    = t1(:,:,2) + fmask*(t1(:,:,1) - t1(:,:,2))
         end if
+
+        denvvs_out_0 = denvvs(:,:,0)
+        denvvs_out_1 = denvvs(:,:,1)
+        denvvs_out_2 = denvvs(:,:,2)
     end
 
     ! Compute orographic factor for land surface drag

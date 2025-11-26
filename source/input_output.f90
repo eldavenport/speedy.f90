@@ -6,7 +6,7 @@ module input_output
     use netcdf
     use params
     use physics, only: rh
-    use auxiliaries, only: precnv
+    use auxiliaries, only: precnv, qdif, evap, denvvs_out_0, denvvs_out_1, denvvs_out_2
 
     implicit none
 
@@ -38,7 +38,7 @@ contains
         character(len=32) :: time_template = 'hours since yyyy-mm-dd hh:mm:0.0'
         integer :: k, ncid
         integer :: timedim, latdim, londim, levdim
-        integer :: timevar, latvar, lonvar, levvar, uvar, vvar, tvar, qvar, phivar, psvar, rhvar, precnvvar
+        integer :: timevar, latvar, lonvar, levvar, uvar, vvar, tvar, qvar, phivar, psvar, rhvar, precnvvar, qdifvar, evapvar_0, evapvar_1, evapvar_2, denvvsvar_0, denvvsvar_1, denvvsvar_2
 
         ! Construct file_name
         write (file_name(1:4),'(i4.4)') model_datetime%year
@@ -91,6 +91,34 @@ contains
         call check(nf90_def_var(ncid, "precnv", nf90_real4, (/ londim, latdim, timedim /), precnvvar))
         call check(nf90_put_att(ncid, precnvvar, "long_name", "convective_precipitation"))
         call check(nf90_put_att(ncid, precnvvar, "units", "g/(m^2 s)"))
+
+        call check(nf90_def_var(ncid, "qdif", nf90_real4, (/ londim, latdim, timedim /), qdifvar))
+        call check(nf90_put_att(ncid, qdifvar, "long_name", "qdif"))
+        call check(nf90_put_att(ncid, qdifvar, "units", "idk"))
+
+        call check(nf90_def_var(ncid, "evap_0", nf90_real4, (/ londim, latdim, timedim /), evapvar_0))
+        call check(nf90_put_att(ncid, evapvar_0, "long_name", "evaporation_0"))
+        call check(nf90_put_att(ncid, evapvar_0, "units", "idk"))
+        
+        call check(nf90_def_var(ncid, "evap_1", nf90_real4, (/ londim, latdim, timedim /), evapvar_1))
+        call check(nf90_put_att(ncid, evapvar_1, "long_name", "evaporation_1"))
+        call check(nf90_put_att(ncid, evapvar_1, "units", "idk"))
+        
+        call check(nf90_def_var(ncid, "evap_2", nf90_real4, (/ londim, latdim, timedim /), evapvar_2))
+        call check(nf90_put_att(ncid, evapvar_2, "long_name", "evaporation_2"))
+        call check(nf90_put_att(ncid, evapvar_2, "units", "idk"))
+
+        call check(nf90_def_var(ncid, "denvvs_0", nf90_real4, (/ londim, latdim, timedim /), denvvsvar_0))
+        call check(nf90_put_att(ncid, denvvsvar_0, "long_name", "denvvs_0"))
+        call check(nf90_put_att(ncid, denvvsvar_0, "units", "idk"))
+        
+        call check(nf90_def_var(ncid, "denvvs_1", nf90_real4, (/ londim, latdim, timedim /), denvvsvar_1))
+        call check(nf90_put_att(ncid, denvvsvar_1, "long_name", "denvvs_1"))
+        call check(nf90_put_att(ncid, denvvsvar_1, "units", "idk"))
+        
+        call check(nf90_def_var(ncid, "denvvs_2", nf90_real4, (/ londim, latdim, timedim /), denvvsvar_2))
+        call check(nf90_put_att(ncid, denvvsvar_2, "long_name", "denvvs_2"))
+        call check(nf90_put_att(ncid, denvvsvar_2, "units", "idk"))
 
         call check(nf90_def_var(ncid, "rh", nf90_real4, (/ londim, latdim, levdim, timedim /), rhvar))
         call check(nf90_put_att(ncid, rhvar, "long_name", "relative_humidity"))
@@ -147,6 +175,13 @@ contains
         call check(nf90_put_var(ncid, psvar, ps_out, (/ 1, 1, 1 /)))
         call check(nf90_put_var(ncid, rhvar, rh, (/ 1, 1, 1, 1 /)))
         call check(nf90_put_var(ncid, precnvvar, precnv, (/ 1, 1, 1 /)))
+        call check(nf90_put_var(ncid, qdifvar, qdif, (/ 1, 1, 1 /)))
+        call check(nf90_put_var(ncid, evapvar_0, evap(:,:,1), (/ 1, 1, 1 /)))
+        call check(nf90_put_var(ncid, evapvar_1, evap(:,:,2), (/ 1, 1, 1 /)))
+        call check(nf90_put_var(ncid, evapvar_2, evap(:,:,3), (/ 1, 1, 1 /)))
+        call check(nf90_put_var(ncid, denvvsvar_0, denvvs_out_0, (/ 1, 1, 1 /)))
+        call check(nf90_put_var(ncid, denvvsvar_1, denvvs_out_1, (/ 1, 1, 1 /)))
+        call check(nf90_put_var(ncid, denvvsvar_2, denvvs_out_2, (/ 1, 1, 1 /)))
 
         call check(nf90_close(ncid))
     end subroutine

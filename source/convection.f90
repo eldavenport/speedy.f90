@@ -24,7 +24,7 @@ module convection
 contains
     !> Compute convective fluxes of dry static energy and moisture using a
     !  simplified mass-flux scheme
-    subroutine get_convection_tendencies(psa, se, qa, qsat, itop, cbmf, precnv, dfse, dfqa)
+    subroutine get_convection_tendencies(psa, se, qa, qsat, itop, cbmf, precnv, dfse, dfqa, qdif)
         use physical_constants, only: p0, alhc, alhs, wvi, grav
         use geometry, only: fsg, dhs
 
@@ -41,7 +41,7 @@ contains
                                                !! atmospheric layer
 
         integer :: i, j, k, k1, nl1, nlp
-        real(p) :: qdif(ix,il)
+        real(p), intent(out) :: qdif(ix,il)
         real(p) :: entr(2:kx-1), delq, enmass, fdq, fds, fm0, fmass, fpsa, fqmax
         real(p) :: fsq, fuq, fus, qb, qmax, qsatb, rdps, sb, sentr
 

@@ -8,8 +8,9 @@ module auxiliaries
     implicit none
 
     private
-    public precnv, precls, snowcv, snowls, cbmf, tsr, ssrd, ssr, slrd, slr, olr, slru
+    public precnv, precls, snowcv, snowls, cbmf, tsr, ssrd, ssr, slrd, slr, olr, slru, qdif
     public ustr, vstr, shf, evap, hfluxn
+    public denvvs_out_0, denvvs_out_1, denvvs_out_2
 
     ! Physical variables shared among all physics schemes
     real(p), dimension(ix,il)   :: precnv !! Convective precipitation  [g/(m^2 s)], total
@@ -24,6 +25,10 @@ module auxiliaries
     real(p), dimension(ix,il)   :: slr    !! Surface longwave radiation (net upward)
     real(p), dimension(ix,il)   :: olr    !! Outgoing longwave radiation (upward)
     real(p), dimension(ix,il,3) :: slru   !! Surface longwave emission (upward)
+    real(p), dimension(ix,il)   :: qdif
+    real(p), dimension(ix,il)   :: denvvs_out_0
+    real(p), dimension(ix,il)   :: denvvs_out_1
+    real(p), dimension(ix,il)   :: denvvs_out_2
 
     ! Third dimension -> 1:land, 2:sea, 3: weighted average
     real(p), dimension(ix,il,3) :: ustr   !! U-stress
