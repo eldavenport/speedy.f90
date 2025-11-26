@@ -26,7 +26,7 @@ module auxiliaries
     real(p), dimension(ix,il)   :: olr    !! Outgoing longwave radiation (upward)
     real(p), dimension(ix,il,3) :: slru   !! Surface longwave emission (upward)
     real(p), dimension(ix,il)   :: qdif
-    real(p), dimension(ix,il)   :: denvvs_out
+    real(p), dimension(ix,il,0:2)   :: denvvs_out
 
     ! Third dimension -> 1:land, 2:sea, 3: weighted average
     real(p), dimension(ix,il,3) :: ustr   !! U-stress

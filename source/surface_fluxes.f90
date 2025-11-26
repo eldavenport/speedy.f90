@@ -70,12 +70,14 @@ contains
         real(p), intent(out) :: u0(ix,il) !! Near-surface u-wind
         real(p), intent(out) :: v0(ix,il) !! Near-surface v-wind
         real(p), intent(out) :: t0(ix,il) !! Near-surface temperature
-        real(p), intent(out) :: denvvs_out(ix,il)
+        real(p), intent(out) :: denvvs_out(ix,il,0:2)
 
         integer :: i, j, ks, nl1
         real(p), dimension(ix,il,2), save :: t1, q1
         real(p), dimension(ix,il,2) :: t2, qsat0
-        real(p), save :: denvvs(ix,il,0:2)
+        ! disable saving denvvs
+        ! real(p), save :: denvvs(ix,il,0:2)
+        real(p) :: denvvs(ix,il,0:2)
         real(p) :: dslr(ix,il), dtskin(ix,il), clamb(ix,il), astab, cdldv, cdsdv(ix,il), chlcp
         real(p) :: dt1, dthl, dths, esbc, ghum0, gtemp0
         real(p) :: rcp, rdth, tsk3(ix,il)
