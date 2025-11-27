@@ -45,7 +45,7 @@ contains
     !  to the dynamical grid-point tendencies
     subroutine get_physical_tendencies(vor, div, t, q, phi, psl, utend, vtend, ttend, qtend)
         use auxiliaries, only: precnv, precls, cbmf, tsr, ssrd, ssr, slrd, slr, olr, slru, ustr, &
-            & vstr, shf, evap, hfluxn, qdif, denvvs_out
+            & vstr, shf, evap, hfluxn, qdif, denvvs_out, iptop
         use physical_constants, only: sigh, grdsig, grdscp, cp
         use geometry, only: fsg
         use boundaries, only: phis0
@@ -81,7 +81,7 @@ contains
         real(p), dimension(ix,il) :: psg, ts, tskin, u0, v0, t0, cloudc, clstr, cltop, prtop
         real(p), dimension(ix,il,kx) :: tt_cnv, qt_cnv, tt_lsc, qt_lsc, tt_rsw, tt_rlw, ut_pbl, vt_pbl,&
             & tt_pbl, qt_pbl
-        integer :: iptop(ix,il), icltop(ix,il,2), icnv(ix,il), i, j, k
+        integer :: icltop(ix,il,2), icnv(ix,il), i, j, k
         real(p) :: sppt_pattern(ix,il,kx)
 
         ! Keep a copy of the original (dynamics only) tendencies

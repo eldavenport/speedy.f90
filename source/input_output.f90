@@ -6,7 +6,7 @@ module input_output
     use netcdf
     use params
     use physics, only: rh
-    use auxiliaries, only: precnv, qdif, evap, denvvs_out
+    use auxiliaries, only: precnv, qdif, evap, denvvs_out, iptop
 
     implicit none
 
@@ -38,7 +38,7 @@ contains
         character(len=32) :: time_template = 'hours since yyyy-mm-dd hh:mm:0.0'
         integer :: k, ncid
         integer :: timedim, latdim, londim, levdim
-        integer :: timevar, latvar, lonvar, levvar, uvar, vvar, tvar, qvar, phivar, psvar, rhvar, precnvvar, qdifvar, evapvar_0, evapvar_1, evapvar_2, denvvsvar_0, denvvsvar_1, denvvsvar_2
+        integer :: timevar, latvar, lonvar, levvar, uvar, vvar, tvar, qvar, phivar, psvar, rhvar, precnvvar, qdifvar, evapvar_0, evapvar_1, evapvar_2, denvvsvar_0, denvvsvar_1, denvvsvar_2, iptopvar
 
         ! Construct file_name
         write (file_name(1:4),'(i4.4)') model_datetime%year
@@ -120,6 +120,10 @@ contains
         call check(nf90_put_att(ncid, denvvsvar_2, "long_name", "denvvs_2"))
         call check(nf90_put_att(ncid, denvvsvar_2, "units", "idk"))
 
+        call check(nf90_def_var(ncid, "iptop", nf90_real4, (/ londim, latdim, timedim /), iptopvar))
+        call check(nf90_put_att(ncid, iptopvar, "long_name", "cloud top index"))
+        call check(nf90_put_att(ncid, iptopvar, "units", "1"))
+
         call check(nf90_def_var(ncid, "rh", nf90_real4, (/ londim, latdim, levdim, timedim /), rhvar))
         call check(nf90_put_att(ncid, rhvar, "long_name", "relative_humidity"))
         call check(nf90_put_att(ncid, rhvar, "units", "1"))
@@ -182,6 +186,7 @@ contains
         call check(nf90_put_var(ncid, denvvsvar_0, denvvs_out(:,:,0), (/ 1, 1, 1 /)))
         call check(nf90_put_var(ncid, denvvsvar_1, denvvs_out(:,:,1), (/ 1, 1, 1 /)))
         call check(nf90_put_var(ncid, denvvsvar_2, denvvs_out(:,:,2), (/ 1, 1, 1 /)))
+        call check(nf90_put_var(ncid, iptopvar, iptop, (/ 1, 1, 1 /)))
 
         call check(nf90_close(ncid))
     end subroutine
