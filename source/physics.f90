@@ -45,7 +45,7 @@ contains
     !  to the dynamical grid-point tendencies
     subroutine get_physical_tendencies(vor, div, t, q, phi, psl, utend, vtend, ttend, qtend)
         use auxiliaries, only: precnv, precls, cbmf, tsr, ssrd, ssr, slrd, slr, olr, slru, ustr, &
-            & vstr, shf, evap, hfluxn, qdif, denvvs_out, iptop
+            & vstr, shf, evap, hfluxn, qdif, denvvs_out, iptop, psa_out, se_out, qa_out, qsat_out
         use physical_constants, only: sigh, grdsig, grdscp, cp
         use geometry, only: fsg
         use boundaries, only: phis0
@@ -125,7 +125,7 @@ contains
         ! =========================================================================
 
         ! Deep convection
-        call get_convection_tendencies(psg, se, qg, qsat, iptop, cbmf, precnv, tt_cnv, qt_cnv, qdif)
+        call get_convection_tendencies(psg, se, qg, qsat, iptop, cbmf, precnv, tt_cnv, qt_cnv, qdif, psa_out, se_out, qa_out, qsat_out)
 
         do k = 2, kx
             tt_cnv(:,:,k) = tt_cnv(:,:,k)*rps*grdscp(k)

@@ -10,7 +10,7 @@ module auxiliaries
     private
     public precnv, precls, snowcv, snowls, cbmf, tsr, ssrd, ssr, slrd, slr, olr, slru
     public ustr, vstr, shf, evap, hfluxn
-    public qdif, denvvs_out, iptop
+    public qdif, denvvs_out, iptop, psa_out, se_out, qa_out, qsat_out
 
     ! Physical variables shared among all physics schemes
     real(p), dimension(ix,il)   :: precnv !! Convective precipitation  [g/(m^2 s)], total
@@ -28,6 +28,10 @@ module auxiliaries
     real(p), dimension(ix,il)   :: qdif
     real(p), dimension(ix,il,0:2)   :: denvvs_out
     integer, dimension(ix,il)   :: iptop
+    real(p), dimension(ix,il)   :: psa_out
+    real(p), dimension(ix,il,kx) :: se_out
+    real(p), dimension(ix,il,kx) :: qa_out
+    real(p), dimension(ix,il,kx) :: qsat_out
 
     ! Third dimension -> 1:land, 2:sea, 3: weighted average
     real(p), dimension(ix,il,3) :: ustr   !! U-stress

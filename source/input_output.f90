@@ -6,7 +6,7 @@ module input_output
     use netcdf
     use params
     use physics, only: rh
-    use auxiliaries, only: precnv, qdif, evap, denvvs_out, iptop
+    use auxiliaries, only: precnv, qdif, evap, denvvs_out, iptop, psa_out, se_out, qa_out, qsat_out
 
     implicit none
 
@@ -38,7 +38,7 @@ contains
         character(len=32) :: time_template = 'hours since yyyy-mm-dd hh:mm:0.0'
         integer :: k, ncid
         integer :: timedim, latdim, londim, levdim
-        integer :: timevar, latvar, lonvar, levvar, uvar, vvar, tvar, qvar, phivar, psvar, rhvar, precnvvar, qdifvar, evapvar_0, evapvar_1, evapvar_2, denvvsvar_0, denvvsvar_1, denvvsvar_2, iptopvar
+        integer :: timevar, latvar, lonvar, levvar, uvar, vvar, tvar, qvar, phivar, psvar, rhvar, precnvvar, qdifvar, evapvar_0, evapvar_1, evapvar_2, denvvsvar_0, denvvsvar_1, denvvsvar_2, iptopvar, psa_outvar, se_outvar, qa_outvar, qsat_outvar
 
         ! Construct file_name
         write (file_name(1:4),'(i4.4)') model_datetime%year
@@ -124,6 +124,22 @@ contains
         call check(nf90_put_att(ncid, iptopvar, "long_name", "cloud top index"))
         call check(nf90_put_att(ncid, iptopvar, "units", "1"))
 
+        call check(nf90_def_var(ncid, "psa_out", nf90_real4, (/ londim, latdim, timedim /), psa_outvar))
+        call check(nf90_put_att(ncid, psa_outvar, "long_name", "psa_out"))
+        call check(nf90_put_att(ncid, psa_outvar, "units", "idk"))
+
+        call check(nf90_def_var(ncid, "se_out", nf90_real4, (/ londim, latdim, levdim, timedim /), se_outvar))
+        call check(nf90_put_att(ncid, se_outvar, "long_name", "se_out"))
+        call check(nf90_put_att(ncid, se_outvar, "units", "idk"))
+
+        call check(nf90_def_var(ncid, "qa_out", nf90_real4, (/ londim, latdim, levdim, timedim /), qa_outvar))
+        call check(nf90_put_att(ncid, qa_outvar, "long_name", "qa_out"))
+        call check(nf90_put_att(ncid, qa_outvar, "units", "idk"))
+
+        call check(nf90_def_var(ncid, "qsat_out", nf90_real4, (/ londim, latdim, levdim, timedim /), qsat_outvar))
+        call check(nf90_put_att(ncid, qsat_outvar, "long_name", "qsat_out"))
+        call check(nf90_put_att(ncid, qsat_outvar, "units", "idk"))
+
         call check(nf90_def_var(ncid, "rh", nf90_real4, (/ londim, latdim, levdim, timedim /), rhvar))
         call check(nf90_put_att(ncid, rhvar, "long_name", "relative_humidity"))
         call check(nf90_put_att(ncid, rhvar, "units", "1"))
@@ -187,6 +203,10 @@ contains
         call check(nf90_put_var(ncid, denvvsvar_1, denvvs_out(:,:,1), (/ 1, 1, 1 /)))
         call check(nf90_put_var(ncid, denvvsvar_2, denvvs_out(:,:,2), (/ 1, 1, 1 /)))
         call check(nf90_put_var(ncid, iptopvar, iptop, (/ 1, 1, 1 /)))
+        call check(nf90_put_var(ncid, psa_outvar, psa_out, (/ 1, 1, 1 /)))
+        call check(nf90_put_var(ncid, se_outvar, se_out, (/ 1, 1, 1, 1 /)))
+        call check(nf90_put_var(ncid, qa_outvar, qa_out, (/ 1, 1, 1, 1 /)))
+        call check(nf90_put_var(ncid, qsat_outvar, qsat_out, (/ 1, 1, 1, 1 /)))
 
         call check(nf90_close(ncid))
     end subroutine
