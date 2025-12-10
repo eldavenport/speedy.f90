@@ -24,8 +24,7 @@ module convection
 contains
     !> Compute convective fluxes of dry static energy and moisture using a
     !  simplified mass-flux scheme
-    subroutine get_convection_tendencies(psa, se, qa, qsat, itop, cbmf, precnv, dfse, dfqa, qdif, &
-                                        & psa_out, se_out, qa_out, qsat_out)
+    subroutine get_convection_tendencies(psa, se, qa, qsat, itop, cbmf, precnv, dfse, dfqa, qdif, psa_out, se_out, qa_out, qsat_out, mss_out, mse0_out, mse1_out, mss0_out, mss2_out, msthr_out, qthr0out, qthr1out, ktop1out, ktop2out)
         use physical_constants, only: p0, alhc, alhs, wvi, grav
         use geometry, only: fsg, dhs
 
@@ -44,11 +43,24 @@ contains
         real(p), intent(out) :: se_out(ix,il,kx)
         real(p), intent(out) :: qa_out(ix,il,kx)
         real(p), intent(out) :: qsat_out(ix,il,kx)
+        real(p), intent(out) :: mss_out(ix,il,2:kx)
+        real(p), intent(out) :: mse0_out(ix,il)
+        real(p), intent(out) :: mse1_out(ix,il)
+        real(p), intent(out) :: mss0_out(ix,il)
+        real(p), intent(out) :: mss2_out(ix,il)
+        real(p), intent(out) :: msthr_out(ix,il)
+        real(p), intent(out) :: qthr0out(ix,il)
+        real(p), intent(out) :: qthr1out(ix,il)
+        integer, intent(out) :: ktop1out(ix,il)
+        integer, intent(out) :: ktop2out(ix,il)
 
         integer :: i, j, k, k1, nl1, nlp
         real(p), intent(out) :: qdif(ix,il)
         real(p) :: entr(2:kx-1), delq, enmass, fdq, fds, fm0, fmass, fpsa, fqmax
         real(p) :: fsq, fuq, fus, qb, qmax, qsatb, rdps, sb, sentr
+
+        dfse = 0.0_p
+        dfqa = 0.0_p
 
         ! 1. Initialization of output and workspace arrays
         nl1 = kx - 1
@@ -80,7 +92,7 @@ contains
         qsat_out = qsat
 
         ! 2. Check of conditions for convection
-        call diagnose_convection(psa, se, qa, qsat, itop, qdif)
+        call diagnose_convection(psa, se, qa, qsat, itop, qdif, mss_out, mse0_out, mse1_out, mss0_out, mss2_out, msthr_out, qthr0out, qthr1out, ktop1out, ktop2out)
 
         ! 3. Convection over selected grid-points
         do i = 1, ix
@@ -177,7 +189,7 @@ contains
     !  tropospheric level is lower than in the boundary-layer level, or, the
     !  relative humidity in the boundary-layer level and lowest tropospheric
     !  level exceed a set threshold (rhbl).
-    subroutine diagnose_convection(psa, se, qa, qsat, itop, qdif)
+    subroutine diagnose_convection(psa, se, qa, qsat, itop, qdif, mss_out, mse0_out, mse1_out, mss0_out, mss2_out, msthr_out, qthr0out, qthr1out, ktop1out, ktop2out)
         use physical_constants, only: alhc, wvi
 
         real(p), intent(in)  :: psa(ix,il)     !! Normalised surface pressure [p/p0]
@@ -186,11 +198,24 @@ contains
         real(p), intent(in)  :: qsat(ix,il,kx) !! Saturation specific humidity [g/kg]
         integer, intent(out) :: itop(ix,il)    !! Top of convection (layer index)
         real(p), intent(out) :: qdif(ix,il)    !! Excess humidity in convective gridboxes
+        real(p), intent(out) :: mss_out(ix,il,2:kx)
+        real(p), intent(out) :: mse0_out(ix,il)
+        real(p), intent(out) :: mse1_out(ix,il)
+        real(p), intent(out) :: mss0_out(ix,il)
+        real(p), intent(out) :: mss2_out(ix,il)
+        real(p), intent(out) :: msthr_out(ix,il)
+        real(p), intent(out) :: qthr0out(ix,il)
+        real(p), intent(out) :: qthr1out(ix,il)
+        integer, intent(out) :: ktop1out(ix,il)
+        integer, intent(out) :: ktop2out(ix,il)
 
         integer :: i, j, k, ktop1, ktop2, nl1, nlp
         real(p) :: mss(ix,il,2:kx), mse0, mse1, mss0, mss2, msthr
         real(p) :: qthr0, qthr1, rlhc
         logical :: lqthr
+
+        itop = 0
+        qdif = 0.0_p
 
         nl1 = kx - 1
         nlp = kx + 1
@@ -205,6 +230,15 @@ contains
         do i = 1, ix
             do j = 1, il
                 itop(i,j) = nlp
+                mse0 = 0.0_p
+                mse1 = 0.0_p
+                mss0 = 0.0_p
+                mss2 = 0.0_p
+                msthr = 0.0_p
+                qthr0 = 0.0_p
+                qthr1 = 0.0_p
+                ktop1 = 0
+                ktop2 = 0
 
                 if (psa(i,j) > psmin) then
                     ! Minimum of moist static energy in the lowest two levels
@@ -250,6 +284,16 @@ contains
                         end if
                     end if
                 end if
+                mss_out(i,j,2:kx) = mss(i,j,2:kx)
+                mse0_out(i,j) = mse0
+                mse1_out(i,j) = mse1
+                mss0_out(i,j) = mss0
+                mss2_out(i,j) = mss2
+                msthr_out(i,j) = msthr
+                qthr0out(i,j) = qthr0
+                qthr1out(i,j) = qthr1
+                ktop1out(i,j) = ktop1
+                ktop2out(i,j) = ktop2
             end do
         end do
     end

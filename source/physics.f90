@@ -6,9 +6,26 @@ module physics
 
     private
     public initialize_physics, get_physical_tendencies
-    public rh
+    public rh_out, tt_lsc, tt_rsw, tt_rlw, tt_pbl_out, tt_pbl, stl_am_a, coa_factor_a, ssrd_a, alb_l_factor_a, psa_a, flux_out_a, qcloud_out, icltop_out, icltop_2, cloudc_out, clstr_out
 
     real(p), dimension(ix,il,kx) :: rh ! making rh available to input_output
+    real(p), dimension(ix,il,kx) :: rh_out
+    real(p), dimension(ix,il,kx) :: tt_lsc
+    real(p), dimension(ix,il,kx) :: tt_rsw
+    real(p), dimension(ix,il,kx) :: tt_rlw
+    real(p), dimension(ix,il,kx) :: tt_pbl_out
+    real(p), dimension(ix,il,kx) :: tt_pbl
+    real(p), dimension(ix,il) :: stl_am_a
+    real(p), dimension(il) :: coa_factor_a
+    real(p), dimension(ix,il) :: ssrd_a
+    real(p), dimension(ix,il) :: alb_l_factor_a
+    real(p), dimension(ix,il) :: psa_a
+    real(p), dimension(ix,il,kx,2) :: flux_out_a
+    real(p), dimension(ix,il) :: qcloud_out
+    integer, dimension(ix,il) :: icltop_out
+    integer, dimension(ix,il) :: icltop_2
+    real(p), dimension(ix,il) :: cloudc_out
+    real(p), dimension(ix,il) :: clstr_out
 
 contains
     ! Initialize physical parametrization routines
@@ -44,8 +61,7 @@ contains
     !> Compute physical parametrization tendencies for u, v, t, q and add them
     !  to the dynamical grid-point tendencies
     subroutine get_physical_tendencies(vor, div, t, q, phi, psl, utend, vtend, ttend, qtend)
-        use auxiliaries, only: precnv, precls, cbmf, tsr, ssrd, ssr, slrd, slr, olr, slru, ustr, &
-            & vstr, shf, evap, hfluxn, qdif, denvvs_out, iptop, psa_out, se_out, qa_out, qsat_out
+        use auxiliaries, only: precnv, precls, cbmf, tsr, ssrd, ssr, slrd, slr, olr, slru, ustr, vstr, shf, evap, hfluxn, qdif, denvvs_out, iptop, iptop_out, psa_out, se_out, qa_out, qsat_out, mss_out, mse0_out, mse1_out, mss0_out, mss2_out, msthr_out, qthr0out, qthr1out, ktop1out, ktop2out, tt_cnv, qt_cnv, phis0_out, fmask_out, tsea_out, ssrd_out, slrd_out, shf_out, slru_out, hfluxn_out, tsfc_out, tskin_out, t0_out, stl_am_out, soilw_am_out, tskin_out_2, hfluxn_debug, denvvs_debug, qsat0_debug, dtskin_debug, rlus_debug, shf_debug, evap_debug, t0_debug, dthl_debug, q_debug, soilw_am_debug_final, qsat0_debug_final, q1_debug_final, tskin_debug_final, psa_debug_final
         use physical_constants, only: sigh, grdsig, grdscp, cp
         use geometry, only: fsg
         use boundaries, only: phis0
@@ -79,8 +95,8 @@ contains
         real(p), dimension(ix,il,kx) :: ug, vg, tg, qg, phig, utend_dyn, vtend_dyn, ttend_dyn, qtend_dyn
         real(p), dimension(ix,il,kx) :: se, qsat
         real(p), dimension(ix,il) :: psg, ts, tskin, u0, v0, t0, cloudc, clstr, cltop, prtop
-        real(p), dimension(ix,il,kx) :: tt_cnv, qt_cnv, tt_lsc, qt_lsc, tt_rsw, tt_rlw, ut_pbl, vt_pbl,&
-            & tt_pbl, qt_pbl
+        real(p), dimension(ix,il,kx) :: qt_lsc, ut_pbl, vt_pbl,&
+            & qt_pbl
         integer :: icltop(ix,il,2), icnv(ix,il), i, j, k
         real(p) :: sppt_pattern(ix,il,kx)
 
@@ -125,7 +141,9 @@ contains
         ! =========================================================================
 
         ! Deep convection
-        call get_convection_tendencies(psg, se, qg, qsat, iptop, cbmf, precnv, tt_cnv, qt_cnv, qdif, psa_out, se_out, qa_out, qsat_out)
+        call get_convection_tendencies(psg, se, qg, qsat, iptop, cbmf, precnv, tt_cnv, qt_cnv, qdif, psa_out, se_out, qa_out, qsat_out, mss_out, mse0_out, mse1_out, mss0_out, mss2_out, msthr_out, qthr0out, qthr1out, ktop1out, ktop2out)
+
+        iptop_out = iptop
 
         do k = 2, kx
             tt_cnv(:,:,k) = tt_cnv(:,:,k)*rps*grdscp(k)
@@ -146,10 +164,11 @@ contains
 
         ! Compute shortwave tendencies and initialize lw transmissivity
         ! The shortwave radiation may be called at selected time steps
+        fmask_out = 0.0*fmask_l
         if (compute_shortwave) then
             gse = (se(:,:,kx-1) - se(:,:,kx))/(phig(:,:,kx-1) - phig(:,:,kx))
 
-            call clouds(qg, rh, precnv, precls, iptop, gse, fmask_l, icltop, cloudc, clstr)
+            call clouds(qg, rh, precnv, precls, iptop, gse, fmask_l, icltop, icltop_2, cloudc, clstr, qcloud_out)
 
             do i = 1, ix
                 do j = 1, il
@@ -158,24 +177,42 @@ contains
                 end do
             end do
 
-            call get_shortwave_rad_fluxes(psg, qg, icltop, cloudc, clstr, ssrd, ssr, tsr, tt_rsw)
+            call get_shortwave_rad_fluxes(psg, qg, icltop, cloudc, clstr, ssrd, ssr, tsr, tt_rsw, flux_out_a)
 
             do k = 1, kx
                 tt_rsw(:,:,k) = tt_rsw(:,:,k)*rps*grdscp(k)
             end do
+            fmask_out = fmask_l
         end if
+
+        icltop_out = icltop(:,:,1)
+        cloudc_out = cloudc
+        clstr_out = clstr
 
         ! Compute downward longwave fluxes
         call get_downward_longwave_rad_fluxes(tg, slrd, tt_rlw)
 
+        rh_out = rh
+        phis0_out = phis0 ! FIXME
+        tsea_out = sst_am
+        ssrd_out = ssrd
+        slrd_out = slrd
+
         ! Compute surface fluxes and land skin temperature
-        call get_surface_fluxes(psg, ug, vg, tg, qg, rh, phig, phis0, fmask_l, sst_am, &
-                & ssrd, slrd, ustr, vstr, shf, evap, slru, hfluxn, ts, tskin, u0, v0, t0, .true., denvvs_out)
+        call get_surface_fluxes(psg, ug, vg, tg, qg, rh, phig, phis0, fmask_l, sst_am, ssrd, slrd, ustr, vstr, shf, evap, slru, hfluxn, ts, tskin, u0, v0, t0, .true., denvvs_out, stl_am_out, soilw_am_out, tskin_out_2, hfluxn_debug, denvvs_debug, qsat0_debug, dtskin_debug, rlus_debug, shf_debug, evap_debug, t0_debug, dthl_debug, q_debug, soilw_am_debug_final, qsat0_debug_final, q1_debug_final, tskin_debug_final, psa_debug_final, stl_am_a, coa_factor_a, ssrd_a, alb_l_factor_a, psa_a)
+
+        shf_out = shf
+        slru_out = slru
+        hfluxn_out = hfluxn
+        tsfc_out = ts
+        tskin_out = tskin
+        t0_out = t0
+
+        sea_coupling_flag = 0
 
         ! Recompute sea fluxes in case of anomaly coupling
         if (sea_coupling_flag > 0) then
-           call get_surface_fluxes(psg, ug, vg, tg, qg, rh, phig, phis0, fmask_l, ssti_om, &
-                   & ssrd, slrd, ustr, vstr, shf, evap, slru, hfluxn, ts, tskin, u0, v0, t0, .false., denvvs_out)
+           call get_surface_fluxes(psg, ug, vg, tg, qg, rh, phig, phis0, fmask_l, ssti_om, ssrd, slrd, ustr, vstr, shf, evap, slru, hfluxn, ts, tskin, u0, v0, t0, .false., denvvs_out, stl_am_out, soilw_am_out, tskin_out_2, hfluxn_debug, denvvs_debug, qsat0_debug, dtskin_debug, rlus_debug, shf_debug, evap_debug, t0_debug, dthl_debug, q_debug, soilw_am_debug_final, qsat0_debug_final, q1_debug_final, tskin_debug_final, psa_debug_final, stl_am_a, coa_factor_a, ssrd_a, alb_l_factor_a, psa_a)
         end if
 
         ! Compute upward longwave fluxes, convert them to tendencies and add
@@ -195,6 +232,8 @@ contains
         ! Vertical diffusion and shallow convection
         call get_vertical_diffusion_tend(se, rh, qg, qsat, phig, icnv, ut_pbl, vt_pbl, &
             & tt_pbl, qt_pbl)
+
+        tt_pbl_out = tt_pbl
 
         ! Add tendencies due to surface fluxes
         ut_pbl(:,:,kx) = ut_pbl(:,:,kx) + ustr(:,:,3)*rps*grdsig(kx)

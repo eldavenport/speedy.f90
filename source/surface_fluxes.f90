@@ -38,8 +38,7 @@ module surface_fluxes
 contains
     !> Compute surface fluxes of momentum, energy and moisture, and define surface
     !  skin temperature from energy balance
-    subroutine get_surface_fluxes(psa, ua, va, ta, qa, rh, phi, phi0, fmask, tsea, ssrd, slrd, &
-            & ustr, vstr, shf, evap, slru, hfluxn, tsfc, tskin, u0, v0, t0, lfluxland, denvvs_out)
+    subroutine get_surface_fluxes(psa, ua, va, ta, qa, rh, phi, phi0, fmask, tsea, ssrd, slrd, ustr, vstr, shf, evap, slru, hfluxn, tsfc, tskin, u0, v0, t0, lfluxland, denvvs_out, stl_am_out, soilw_am_out, tskin_out, hfluxn_debug, denvvs_debug, qsat0_debug, dtskin_debug, rlus_debug, shf_debug, evap_debug, t0_debug, dthl_debug, q_debug, soilw_am_debug_final, qsat0_debug_final, q1_debug_final, tskin_debug_final, psa_debug_final, stl_am_a, coa_factor_a, ssrd_a, alb_l_factor_a, psa_a)
         use physical_constants, only: p0, rgas, cp, alhc, sbc, sigl, wvi
         use geometry, only: coa
         use mod_radcon, only: emisfc, alb_l, alb_s, snowc
@@ -72,6 +71,32 @@ contains
         real(p), intent(out) :: t0(ix,il) !! Near-surface temperature
         real(p), intent(out) :: denvvs_out(ix,il,0:2)
 
+        real(p), intent(out) :: stl_am_out(ix,il)
+        real(p), intent(out) :: soilw_am_out(ix,il)
+
+        real(p), intent(out) :: tskin_out(ix,il)
+        real(p), intent(out) :: hfluxn_debug(ix,il)
+        real(p), intent(out) :: denvvs_debug(ix,il)
+        real(p), intent(out) :: qsat0_debug(ix,il)
+        real(p), intent(out) :: dtskin_debug(ix,il)
+        real(p), intent(out) :: rlus_debug(ix,il)
+        real(p), intent(out) :: shf_debug(ix,il)
+        real(p), intent(out) :: evap_debug(ix,il)
+        real(p), intent(out) :: t0_debug(ix,il)
+        real(p), intent(out) :: dthl_debug(ix,il)
+        real(p), intent(out) :: q_debug(ix,il)
+        real(p), intent(out) :: soilw_am_debug_final(ix,il)
+        real(p), intent(out) :: qsat0_debug_final(ix,il)
+        real(p), intent(out) :: q1_debug_final(ix,il)
+        real(p), intent(out) :: tskin_debug_final(ix,il)
+        real(p), intent(out) :: psa_debug_final(ix,il)
+
+        real(p), intent(out) :: stl_am_a(ix,il)
+        real(p), intent(out) :: coa_factor_a(il)
+        real(p), intent(out) :: ssrd_a(ix,il)
+        real(p), intent(out) :: alb_l_factor_a(ix,il)
+        real(p), intent(out) :: psa_a(ix,il)
+
         integer :: i, j, ks, nl1
         real(p), dimension(ix,il,2), save :: t1, q1
         real(p), dimension(ix,il,2) :: t2, qsat0
@@ -83,6 +108,9 @@ contains
         real(p) :: rcp, rdth, tsk3(ix,il)
 
         logical lscasym, lskineb
+
+        stl_am_out = stl_am
+        soilw_am_out = soilw_am
 
 
         lscasym = .true.   ! true : use an asymmetric stability coefficient
@@ -149,6 +177,12 @@ contains
                 tskin(:,j) = stl_am(:,j) + ctday*sqrt(coa(j))*ssrd(:,j)*(1.0 - alb_l(:,j))*psa(:,j)
             end do
 
+            stl_am_a = stl_am
+            coa_factor_a = sqrt(coa)
+            ssrd_a = ssrd
+            alb_l_factor_a = (1.0 - alb_l)
+            psa_a = psa
+
             ! 2.2 Stability correction = f[pot.temp.(sfc)-pot.temp.(air)]
             rdth  = fstab/dtheta
             astab = 1.0
@@ -163,6 +197,7 @@ contains
                         dthl = max(-dtheta, astab*(tskin(i,j) - t2(i,j,1)))
                     end if
                     denvvs(i,j,1) = denvvs(i,j,0)*(1.0 + dthl*rdth)
+                    dthl_debug(i,j) = dthl
                 end do
             end do
 
@@ -189,6 +224,16 @@ contains
             end if
 
             qsat0(:,:,1) = get_qsat(tskin, psa, 1.0_p)
+
+            t0_debug = t0
+            q_debug = soilw_am*qsat0(:,:,1) - q1(:,:,1)
+
+            soilw_am_debug_final = soilw_am
+            qsat0_debug_final = qsat0(:,:,1)
+            q1_debug_final = q1(:,:,1)
+            tskin_debug_final = tskin
+            psa_debug_final = psa
+
             evap(:,:,1) = chl*denvvs(:,:,1)*max(0.0, soilw_am*qsat0(:,:,1) - q1(:,:,1))
 
             ! 3. Compute land-surface energy balance;
@@ -200,6 +245,12 @@ contains
             dslr = 4.0*esbc*tsk3
             slru(:,:,1) = esbc*tsk3*tskin
             hfluxn(:,:,1) = ssrd*(1.0 - alb_l) + slrd - (slru(:,:,1) + shf(:,:,1) + alhc*evap(:,:,1))
+
+            rlus_debug = slru(:,:,1)
+            shf_debug = shf(:,:,1)
+            evap_debug = evap(:,:,1)
+
+            tskin_out = tskin
 
             ! 3.2 Re-definition of skin temperature from energy balance
             if (lskineb) then
@@ -221,8 +272,15 @@ contains
                     end do
                 end do
 
+                hfluxn_debug = hfluxn(:,:,1)
+                denvvs_debug = denvvs(:,:,1)
+                qsat0_debug = qsat0(:,:,2)
+                
                 ! Redefine skin temperature to balance the heat budget
                 dtskin = hfluxn(:,:,1)/(clamb + dslr + chl*denvvs(:,:,1)*(cp + alhc*qsat0(:,:,2)))
+                
+                dtskin_debug = dtskin
+
                 tskin = tskin + dtskin
 
                 ! Add linear corrections to heat fluxes

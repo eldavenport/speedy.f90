@@ -71,7 +71,7 @@ module shortwave_radiation
 contains
     !> Compute the absorption of shortwave radiation and initialize arrays
     !  for longwave-radiation routines
-    subroutine get_shortwave_rad_fluxes(psa, qa, icltop, cloudc, clstr, fsfcd, fsfc, ftop, dfabs)
+    subroutine get_shortwave_rad_fluxes(psa, qa, icltop, cloudc, clstr, fsfcd, fsfc, ftop, dfabs, flux_out_a)
         use geometry, only: fsg, dhs
         use mod_radcon
 
@@ -88,6 +88,7 @@ contains
                                                 !! top of the atmosphere
         real(p), intent(out) :: dfabs(ix,il,kx) !! Flux of short-wave radiation absorbed in each
                                                 !! atmospheric layer
+        real(p), intent(out) :: flux_out_a(ix,il,kx,2) !! Shortwave fluxes FIXME
 
         integer :: i, j, k, nl1
         real(p) :: acloud(ix,il), psaz(ix,il), abs1, acloud1, deltap, eps1
@@ -138,6 +139,11 @@ contains
             tau2(:,:,k,2) = exp(-psaz*dhs(k)*abswv2*qa(:,:,k))
         end do
 
+        do k = 1, kx
+            flux_out_a(:,:,k,1) = 0.0
+            flux_out_a(:,:,k,2) = 0.0
+        end do
+
         ! 3. Shortwave downward flux
         ! 3.1 Initialization of fluxes
         ftop = fsol
@@ -150,10 +156,14 @@ contains
         flux(:,:,1)  = tau2(:,:,k,1)*(flux(:,:,1) - ozupp*psa)
         dfabs(:,:,k) = dfabs(:,:,k) - flux(:,:,1)
 
+        flux_out_a(:,:,1,1) = flux(:,:,1)
+
         k = 2
         dfabs(:,:,k) = flux(:,:,1)
         flux(:,:,1)  = tau2(:,:,k,1)*(flux(:,:,1) - ozone*psa)
         dfabs(:,:,k) = dfabs(:,:,k) - flux(:,:,1)
+
+        flux_out_a(:,:,2,1) = flux(:,:,1)
 
         ! 3.3  Absorption and reflection in the troposphere
         do k = 3, kx
@@ -162,12 +172,14 @@ contains
             dfabs(:,:,k)  = flux(:,:,1)
             flux (:,:,1)  = tau2(:,:,k,1)*flux(:,:,1)
             dfabs(:,:,k)  = dfabs(:,:,k) - flux(:,:,1)
+            flux_out_a(:,:,k,1) = flux(:,:,1)
         end do
 
         do k = 2, kx
             dfabs(:,:,k) = dfabs(:,:,k) + flux(:,:,2)
             flux(:,:,2)  = tau2(:,:,k,2)*flux(:,:,2)
             dfabs(:,:,k) = dfabs(:,:,k) - flux(:,:,2)
+            flux_out_a(:,:,k,2) = flux(:,:,2)
         end do
 
         ! 4. Shortwave upward flux
@@ -329,7 +341,7 @@ contains
     end
 
     !>  Compute cloud-top level and cloud cover
-    subroutine clouds(qa,rh,precnv,precls,iptop,gse,fmask,icltop,cloudc,clstr)
+    subroutine clouds(qa,rh,precnv,precls,iptop,gse,fmask,icltop,icltop_out,cloudc,clstr,qcloud_out)
         integer :: iptop(ix,il)
         real(p), intent(in) :: qa(ix,il,kx)   !! Specific humidity [g/kg]
         real(p), intent(in) :: rh(ix,il,kx)   !! Relative humidity
@@ -338,9 +350,10 @@ contains
         real(p), intent(in) :: gse(ix,il)     !! Vertical gradient of dry static energy
         real(p), intent(in) :: fmask(ix,il)   !! Fraction land-sea mask
         integer, intent(out) :: icltop(ix,il) !! Cloud top level
+        integer, intent(out) :: icltop_out(ix,il) !! Cloud top level
         real(p), intent(out) :: cloudc(ix,il) !! Total cloud cover
         real(p), intent(out) :: clstr(ix,il)  !! Stratiform cloud cover
-
+        real(p), intent(out) :: qcloud_out(ix,il) !! Equivalent specific humidity of clouds
         integer :: i, j, k, nl1, nlp
         real(p) :: clfact, clstrl, drh, fstab, pr1, rgse, rrcl
 
@@ -381,6 +394,8 @@ contains
             end do
         end do
 
+        icltop_out = icltop + 0
+
         do i = 1, ix
             do j = 1, il
                 pr1 = min(pmaxcl, 86.4*(precnv(i,j) + precls(i,j)))
@@ -391,6 +406,7 @@ contains
 
         ! 2.  Equivalent specific humidity of clouds
         qcloud = qa(:,:,nl1)
+        qcloud_out = qcloud
 
         ! 3. Stratiform clouds at the top of PBL
         clfact = 1.2
