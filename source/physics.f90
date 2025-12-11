@@ -6,7 +6,7 @@ module physics
 
     private
     public initialize_physics, get_physical_tendencies
-    public rh_out, tt_lsc, tt_rsw, tt_rlw, tt_pbl_out, tt_pbl, stl_am_a, coa_factor_a, ssrd_a, alb_l_factor_a, psa_a, flux_out_a, qcloud_out, icltop_out, icltop_2, cloudc_out, clstr_out
+    public rh_out, tt_lsc, tt_rsw, tt_rlw, tt_pbl_out, tt_pbl, stl_am_a, coa_factor_a, ssrd_a, alb_l_factor_a, psa_a, flux_out_a, qcloud_out, icltop_out, icltop_2, cloudc_out, clstr_out, flux_out, rlus_b, st4a_0b, st4a_1b, flux_b
 
     real(p), dimension(ix,il,kx) :: rh ! making rh available to input_output
     real(p), dimension(ix,il,kx) :: rh_out
@@ -26,6 +26,11 @@ module physics
     integer, dimension(ix,il) :: icltop_2
     real(p), dimension(ix,il) :: cloudc_out
     real(p), dimension(ix,il) :: clstr_out
+    real(p), dimension(ix,il,4) :: flux_out
+    real(p), dimension(ix,il) ::    rlus_b
+    real(p), dimension(ix,il,kx) :: st4a_0b
+    real(p), dimension(ix,il,kx) :: st4a_1b
+    real(p), dimension(ix,il) ::    flux_b
 
 contains
     ! Initialize physical parametrization routines
@@ -217,8 +222,7 @@ contains
 
         ! Compute upward longwave fluxes, convert them to tendencies and add
         ! shortwave tendencies
-        call get_upward_longwave_rad_fluxes(tg, ts, slrd, slru(:,:,3), slr, olr, tt_rlw)
-
+        call get_upward_longwave_rad_fluxes(tg, ts, slrd, slru(:,:,3), slr, olr, tt_rlw, flux_out, rlus_b, st4a_0b, st4a_1b, flux_b)
         do k = 1, kx
             tt_rlw(:,:,k) = tt_rlw(:,:,k)*rps*grdscp(k)
         end do

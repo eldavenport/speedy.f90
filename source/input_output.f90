@@ -5,7 +5,7 @@ module input_output
     use types, only: p, sp
     use netcdf
     use params
-    use physics, only: rh_out, tt_lsc, tt_rsw, tt_rlw, tt_pbl_out, tt_pbl, stl_am_a, coa_factor_a, ssrd_a, alb_l_factor_a, psa_a, flux_out_a, qcloud_out, icltop_out, icltop_2, cloudc_out, clstr_out
+    use physics, only: rh_out, tt_lsc, tt_rsw, tt_rlw, tt_pbl_out, tt_pbl, stl_am_a, coa_factor_a, ssrd_a, alb_l_factor_a, psa_a, flux_out_a, qcloud_out, icltop_out, icltop_2, cloudc_out, clstr_out, flux_out, rlus_b, st4a_0b, st4a_1b, flux_b
     use auxiliaries, only: precnv, qdif, evap, denvvs_out, iptop_out, psa_out, se_out, qa_out, qsat_out, mss_out, mse0_out, mse1_out, mss0_out, mss2_out, msthr_out, qthr0out, qthr1out, ktop1out, ktop2out, tt_cnv, qt_cnv, phis0_out, fmask_out, tsea_out, ssrd_out, slrd_out, shf_out, slru_out, hfluxn_out, tsfc_out, tskin_out, t0_out, stl_am_out, soilw_am_out, tskin_out_2, hfluxn_debug, denvvs_debug, qsat0_debug, dtskin_debug, rlus_debug, shf_debug, evap_debug, t0_debug, dthl_debug, q_debug, soilw_am_debug_final, qsat0_debug_final, q1_debug_final, tskin_debug_final, psa_debug_final
 
     implicit none
@@ -38,7 +38,7 @@ contains
         character(len=32) :: time_template = 'hours since yyyy-mm-dd hh:mm:0.0'
         integer :: k, ncid
         integer :: timedim, latdim, londim, levdim
-        integer :: timevar, latvar, lonvar, levvar, uvar, vvar, tvar, qvar, phivar, psvar, rhvar, precnvvar, qdifvar, evapvar_0, evapvar_1, evapvar_2, denvvsvar_0, denvvsvar_1, denvvsvar_2, iptopvar, psa_outvar, se_outvar, qa_outvar, qsat_outvar, mss_outvar, mse0_outvar, mse1_outvar, mss0_outvar, mss2_outvar, msthr_outvar, qthr0outvar, qthr1outvar, ktop1outvar, ktop2outvar, tt_cnvvar, qt_cnvvar, phis0var, fmaskvar, tseavar, ssrdvar, slrdvar, shfvar0, shfvar1, shfvar2, slruvar0, slruvar1, slruvar2, hfluxnvar0, hfluxnvar1, tsfcvar, tskinvar, t0var, stl_amvar, soilw_amvar, tskin_out_2var, hfluxn_debugvar, denvvs_debugvar, qsat0_debugvar, dtskin_debugvar, rlus_debugvar, shf_debugvar, evap_debugvar, t0_debugvar, dthl_debugvar, q_debugvar, soilw_am_debug_finalvar, qsat0_debug_finalvar, q1_debug_finalvar, tskin_debug_finalvar, psa_debug_finalvar, tt_lscvar, tt_rswvar, tt_rlwvar, tt_pbl_outvar, tt_pblvar, stl_am_avar, coa_factor_avar, ssrd_avar, alb_l_factor_avar, psa_avar, flux_out_a0var, flux_out_a1var, qcloud_outvar, icltop_outvar, icltop_2var, cloudc_outvar, clstr_outvar
+        integer :: timevar, latvar, lonvar, levvar, uvar, vvar, tvar, qvar, phivar, psvar, rhvar, precnvvar, qdifvar, evapvar_0, evapvar_1, evapvar_2, denvvsvar_0, denvvsvar_1, denvvsvar_2, iptopvar, psa_outvar, se_outvar, qa_outvar, qsat_outvar, mss_outvar, mse0_outvar, mse1_outvar, mss0_outvar, mss2_outvar, msthr_outvar, qthr0outvar, qthr1outvar, ktop1outvar, ktop2outvar, tt_cnvvar, qt_cnvvar, phis0var, fmaskvar, tseavar, ssrdvar, slrdvar, shfvar0, shfvar1, shfvar2, slruvar0, slruvar1, slruvar2, hfluxnvar0, hfluxnvar1, tsfcvar, tskinvar, t0var, stl_amvar, soilw_amvar, tskin_out_2var, hfluxn_debugvar, denvvs_debugvar, qsat0_debugvar, dtskin_debugvar, rlus_debugvar, shf_debugvar, evap_debugvar, t0_debugvar, dthl_debugvar, q_debugvar, soilw_am_debug_finalvar, qsat0_debug_finalvar, q1_debug_finalvar, tskin_debug_finalvar, psa_debug_finalvar, tt_lscvar, tt_rswvar, tt_rlwvar, tt_pbl_outvar, tt_pblvar, stl_am_avar, coa_factor_avar, ssrd_avar, alb_l_factor_avar, psa_avar, flux_out_a0var, flux_out_a1var, qcloud_outvar, icltop_outvar, icltop_2var, cloudc_outvar, clstr_outvar, flux_out_0var, flux_out_1var, flux_out_2var, flux_out_3var, rlus_bvar, st4a_0bvar, st4a_1bvar, flux_bvar
 
         ! Construct file_name
         write (file_name(1:4),'(i4.4)') model_datetime%year
@@ -392,6 +392,36 @@ contains
         call check(nf90_put_att(ncid, clstr_outvar, "long_name", "clstr"))
         call check(nf90_put_att(ncid, clstr_outvar, "units", "idk"))
 
+        call check(nf90_def_var(ncid, "flux_out_0", nf90_real4, (/ londim, latdim, timedim /), flux_out_0var))
+        call check(nf90_put_att(ncid, flux_out_0var, "long_name", "clstr_out"))
+        call check(nf90_put_att(ncid, flux_out_0var, "units", "idk"))
+        call check(nf90_def_var(ncid, "flux_out_1", nf90_real4, (/ londim, latdim, timedim /), flux_out_1var))
+        call check(nf90_put_att(ncid, flux_out_1var, "long_name", "clstr_out"))
+        call check(nf90_put_att(ncid, flux_out_1var, "units", "idk"))
+        call check(nf90_def_var(ncid, "flux_out_2", nf90_real4, (/ londim, latdim, timedim /), flux_out_2var))
+        call check(nf90_put_att(ncid, flux_out_2var, "long_name", "clstr_out"))
+        call check(nf90_put_att(ncid, flux_out_2var, "units", "idk"))
+        call check(nf90_def_var(ncid, "flux_out_3", nf90_real4, (/ londim, latdim, timedim /), flux_out_3var))
+        call check(nf90_put_att(ncid, flux_out_3var, "long_name", "clstr_out"))
+        call check(nf90_put_att(ncid, flux_out_3var, "units", "idk"))
+
+        ! rlus_b
+        call check(nf90_def_var(ncid, "rlus_b", nf90_real4, (/ londim, latdim, timedim /), rlus_bvar))
+        call check(nf90_put_att(ncid, rlus_bvar, "long_name", "rlus_b"))
+        call check(nf90_put_att(ncid, rlus_bvar, "units", "idk"))
+        ! st4a_0b
+        call check(nf90_def_var(ncid, "st4a_0b", nf90_real4, (/ londim, latdim, levdim, timedim /), st4a_0bvar))
+        call check(nf90_put_att(ncid, st4a_0bvar, "long_name", "st4a_0b"))
+        call check(nf90_put_att(ncid, st4a_0bvar, "units", "idk"))
+        ! st4a_1b
+        call check(nf90_def_var(ncid, "st4a_1b", nf90_real4, (/ londim, latdim, levdim, timedim /), st4a_1bvar))
+        call check(nf90_put_att(ncid, st4a_1bvar, "long_name", "st4a_1b"))
+        call check(nf90_put_att(ncid, st4a_1bvar, "units", "idk"))
+        ! flux_b
+        call check(nf90_def_var(ncid, "flux_b", nf90_real4, (/ londim, latdim, timedim /), flux_bvar))
+        call check(nf90_put_att(ncid, flux_bvar, "long_name", "flux_b"))
+        call check(nf90_put_att(ncid, flux_bvar, "units", "idk"))
+
         call check(nf90_def_var(ncid, "rh", nf90_real4, (/ londim, latdim, levdim, timedim /), rhvar))
         call check(nf90_put_att(ncid, rhvar, "long_name", "relative_humidity"))
         call check(nf90_put_att(ncid, rhvar, "units", "1"))
@@ -522,6 +552,14 @@ contains
         call check(nf90_put_var(ncid, icltop_2var, icltop_2, (/ 1, 1, 1 /)))
         call check(nf90_put_var(ncid, cloudc_outvar, cloudc_out, (/ 1, 1, 1 /)))
         call check(nf90_put_var(ncid, clstr_outvar, clstr_out, (/ 1, 1, 1 /)))
+        call check(nf90_put_var(ncid, flux_out_0var, flux_out(:,:,1), (/ 1, 1, 1 /)))
+        call check(nf90_put_var(ncid, flux_out_1var, flux_out(:,:,2), (/ 1, 1, 1 /)))
+        call check(nf90_put_var(ncid, flux_out_2var, flux_out(:,:,3), (/ 1, 1, 1 /)))
+        call check(nf90_put_var(ncid, flux_out_3var, flux_out(:,:,4), (/ 1, 1, 1 /)))
+        call check(nf90_put_var(ncid, rlus_bvar, rlus_b, (/ 1, 1, 1 /)))
+        call check(nf90_put_var(ncid, st4a_0bvar, st4a_0b, (/ 1, 1, 1, 1 /)))
+        call check(nf90_put_var(ncid, st4a_1bvar, st4a_1b, (/ 1, 1, 1, 1 /)))
+        call check(nf90_put_var(ncid, flux_bvar, flux_b, (/ 1, 1, 1 /)))
 
         call check(nf90_close(ncid))
     end subroutine
