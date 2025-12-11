@@ -117,7 +117,7 @@ contains
     end
 
     !> Compute the absorption of upward long-wave radiation fluxes
-    subroutine get_upward_longwave_rad_fluxes(ta, ts, fsfcd, fsfcu, fsfc, ftop, dfabs, flux_out, rlus_b, st4a_0b, st4a_1b, flux_b)
+    subroutine get_upward_longwave_rad_fluxes(ta, ts, fsfcd, fsfcu, fsfc, ftop, dfabs)
         use geometry, only: dhs
         use mod_radcon, only: epslw, emisfc, fband, tau2, st4a, stratc, flux
 
@@ -132,22 +132,12 @@ contains
                                                !! top of the atmosphere
         real(p), intent(inout) :: dfabs(ix,il,kx) !! Flux of long-wave radiation absorbed in each
                                                !! atmospheric layer
-        real(p), intent(out)   :: flux_out(ix,il,4)
-        real(p), intent(out)   :: rlus_b(ix,il)
-        real(p), intent(out)   :: st4a_0b(ix,il,kx)
-        real(p), intent(out)   :: st4a_1b(ix,il,kx)
-        real(p), intent(out)   :: flux_b(ix,il)
 
         integer :: i, j, jb, k
         real(p) :: brad, corlw1(ix,il), corlw2(ix,il), emis, refsfc
 
         refsfc = 1.0 - emisfc
         fsfc = fsfcu - fsfcd
-
-        rlus_b = fsfcu + 0.0
-        st4a_0b = st4a(:,:,:,1) + 0.0
-        st4a_1b = st4a(:,:,:,2) + 0.0
-        flux_b = flux(:,:,1) + 0.0
 
         do jb = 1, nband
             do i = 1, ix
@@ -156,8 +146,6 @@ contains
                 end do
             end do
         end do
-
-        flux_out = flux + 0.0
 
         ! 4.2  Troposphere
 
