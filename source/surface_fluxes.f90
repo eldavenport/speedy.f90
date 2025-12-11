@@ -187,7 +187,6 @@ contains
             end if
 
             qsat0(:,:,1) = get_qsat(tskin, psa, 1.0_p)
-
             evap(:,:,1) = chl*denvvs(:,:,1)*max(0.0, soilw_am*qsat0(:,:,1) - q1(:,:,1))
 
             ! 3. Compute land-surface energy balance;
@@ -222,7 +221,6 @@ contains
 
                 ! Redefine skin temperature to balance the heat budget
                 dtskin = hfluxn(:,:,1)/(clamb + dslr + chl*denvvs(:,:,1)*(cp + alhc*qsat0(:,:,2)))
-
                 tskin = tskin + dtskin
 
                 ! Add linear corrections to heat fluxes
@@ -275,7 +273,7 @@ contains
         evap(:,:,2) = chs*denvvs(:,:,ks)*(qsat0(:,:,2) - q1(:,:,2))
 
         ! for testing outputs with evap = 0 over land like we're seeing in jcm
-        ! evap(:,:,:) = evap(:,:,:) * (1.0_p - spread(fmask, 3, size(evap,3)))
+        ! evap = evap * (1.0_p - spread(fmask, 3, size(evap,3)))
 
         ! 4.5 Emission of lw radiation from the surface
         !     and net heat fluxes into sea surface

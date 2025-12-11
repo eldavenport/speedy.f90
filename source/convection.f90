@@ -45,9 +45,6 @@ contains
         real(p) :: entr(2:kx-1), delq, enmass, fdq, fds, fm0, fmass, fpsa, fqmax
         real(p) :: fsq, fuq, fus, qb, qmax, qsatb, rdps, sb, sentr
 
-        dfse = 0.0_p
-        dfqa = 0.0_p
-
         ! 1. Initialization of output and workspace arrays
         nl1 = kx - 1
         nlp = kx + 1
@@ -185,9 +182,6 @@ contains
         real(p) :: qthr0, qthr1, rlhc
         logical :: lqthr
 
-        itop = 0
-        qdif = 0.0_p
-
         nl1 = kx - 1
         nlp = kx + 1
 
@@ -201,15 +195,6 @@ contains
         do i = 1, ix
             do j = 1, il
                 itop(i,j) = nlp
-                mse0 = 0.0_p
-                mse1 = 0.0_p
-                mss0 = 0.0_p
-                mss2 = 0.0_p
-                msthr = 0.0_p
-                qthr0 = 0.0_p
-                qthr1 = 0.0_p
-                ktop1 = 0
-                ktop2 = 0
 
                 if (psa(i,j) > psmin) then
                     ! Minimum of moist static energy in the lowest two levels

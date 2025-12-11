@@ -125,7 +125,6 @@ contains
         integer :: icltop(ix,il,2), icnv(ix,il), i, j, k
         real(p) :: sppt_pattern(ix,il,kx)
 
-
         ! Keep a copy of the original (dynamics only) tendencies
         utend_dyn = utend
         vtend_dyn = vtend
