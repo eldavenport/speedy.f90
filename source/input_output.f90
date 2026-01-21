@@ -5,7 +5,7 @@ module input_output
     use types, only: p, sp
     use netcdf
     use params
-    use physics, only: rh
+    use physics, only: rh, clstr
 
     implicit none
 
@@ -19,6 +19,7 @@ contains
         use physical_constants, only: p0, grav
         use date, only: model_datetime, start_datetime
         use spectral, only: spec_to_grid, uvspec
+        use auxiliaries, only: precnv, precls
 
         integer, intent(in) :: timestep           !! The time step that is being written
         complex(p), intent(in) :: vor(mx,nx,kx,2)    !! Vorticity
@@ -37,7 +38,8 @@ contains
         character(len=32) :: time_template = 'hours since yyyy-mm-dd hh:mm:0.0'
         integer :: k, ncid
         integer :: timedim, latdim, londim, levdim
-        integer :: timevar, latvar, lonvar, levvar, uvar, vvar, tvar, qvar, phivar, psvar, rhvar
+        integer :: timevar, latvar, lonvar, levvar, uvar, vvar, tvar, qvar, phivar, psvar, rhvar, &
+            & preclsvar, precnvvar, cloudstrvar
 
         ! Construct file_name
         write (file_name(1:4),'(i4.4)') model_datetime%year
@@ -91,6 +93,18 @@ contains
         call check(nf90_put_att(ncid, rhvar, "long_name", "relative_humidity"))
         call check(nf90_put_att(ncid, rhvar, "units", "1"))
 
+        call check(nf90_def_var(ncid, "precls", nf90_real4, (/ londim, latdim, timedim /), preclsvar))
+        call check(nf90_put_att(ncid, preclsvar, "long_name", "condensation.precls"))
+        call check(nf90_put_att(ncid, preclsvar, "units", "g/m2/s"))
+
+        call check(nf90_def_var(ncid, "precnv", nf90_real4, (/ londim, latdim, timedim /), precnvvar))
+        call check(nf90_put_att(ncid, precnvvar, "long_name", "condensation.precnv"))
+        call check(nf90_put_att(ncid, precnvvar, "units", "g/m2/s"))
+
+        call check(nf90_def_var(ncid, "cloudstr", nf90_real4, (/ londim, latdim, timedim /), cloudstrvar))
+        call check(nf90_put_att(ncid, cloudstrvar, "long_name", "shortwave_radiation.cloudstr"))
+        call check(nf90_put_att(ncid, cloudstrvar, "units", "1"))
+
         call check(nf90_def_var(ncid, "phi", nf90_real4, (/ londim, latdim, levdim, timedim /), &
             & phivar))
         call check(nf90_put_att(ncid, phivar, "long_name", "geopotential_height"))
@@ -141,6 +155,9 @@ contains
         call check(nf90_put_var(ncid, phivar, phi_out, (/ 1, 1, 1, 1 /)))
         call check(nf90_put_var(ncid, psvar, ps_out, (/ 1, 1, 1 /)))
         call check(nf90_put_var(ncid, rhvar, rh, (/ 1, 1, 1 /)))
+        call check(nf90_put_var(ncid, preclsvar, precls, (/ 1, 1, 1 /)))
+        call check(nf90_put_var(ncid, precnvvar, precnv, (/ 1, 1, 1 /)))
+        call check(nf90_put_var(ncid, cloudstrvar, clstr, (/ 1, 1, 1 /)))
 
         call check(nf90_close(ncid))
     end subroutine

@@ -6,9 +6,10 @@ module physics
 
     private
     public initialize_physics, get_physical_tendencies
-    public rh
+    public rh, clstr
 
     real(p), dimension(ix,il,kx) :: rh ! making rh available to input_output
+    real(p), dimension(ix,il) :: clstr
 
 contains
     ! Initialize physical parametrization routines
@@ -78,7 +79,7 @@ contains
         real(p), dimension(ix,il) :: pslg, rps, gse
         real(p), dimension(ix,il,kx) :: ug, vg, tg, qg, phig, utend_dyn, vtend_dyn, ttend_dyn, qtend_dyn
         real(p), dimension(ix,il,kx) :: se, qsat
-        real(p), dimension(ix,il) :: psg, ts, tskin, u0, v0, t0, cloudc, clstr, cltop, prtop
+        real(p), dimension(ix,il) :: psg, ts, tskin, u0, v0, t0, cloudc, cltop, prtop
         real(p), dimension(ix,il,kx) :: tt_cnv, qt_cnv, tt_lsc, qt_lsc, tt_rsw, tt_rlw, ut_pbl, vt_pbl,&
             & tt_pbl, qt_pbl
         integer :: iptop(ix,il), icltop(ix,il,2), icnv(ix,il), i, j, k
